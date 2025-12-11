@@ -16,3 +16,6 @@ htmlcov
 
 # Application configuration
 .env
+
+# Generated output files
+output/
