@@ -1,0 +1,41 @@
+[project]
+name = "jira-local-sync"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "TysonGG", email = "nolandriel.eve@gmail.com" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "jira>=3.10.5",
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=6.0.0",
+    "pytest-mock>=3.14.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = [
+    "-v",
+    "--cov=src/jira_local_sync",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--strict-markers",
+]
+markers = [
+    "unit: Unit tests that use mocking and don't require external services",
+    "integration: Integration tests that require real Jira credentials and network access",
+]
+
+[build-system]
+requires = ["uv_build>=0.9.8,<0.10.0"]
+build-backend = "uv_build"
