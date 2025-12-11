@@ -35,19 +35,23 @@ Build a Python library that pulls issues, epics, and sprint data from Jira using
      - Methods: `issue_to_markdown()`, `format_issue_metadata()`, `format_comments()`, etc.
      - Date and file size formatting utilities
 
-4. **File Manager Module** (`file_manager.py`) - **TODO**
+4. **✅ Processor Module** (`processor.py`) - **COMPLETED**
+   - High-level orchestration layer for the library
+   - Memory-efficient generator pattern for processing issues
+   - Configurable options for comments and attachments
+   - **Implementation:**
+     - `JiraProcessor` class combining client and converter
+     - `process_issues()` generator yielding (issue_key, markdown) tuples
+     - `process_single_issue()` for individual issue processing
+     - `test_connection()` for validating Jira credentials
+
+5. **File Manager Module** (`file_manager.py`) - **ADDITIONAL FEATURE**
    - Create output directory structure
    - Generate safe filenames from issue keys and summaries
    - Write markdown files with UTF-8 encoding
    - Organize files by project/type/epic
    - Add metadata tracking
-
-5. **Main Orchestration** - **TODO** (Optional - may be app responsibility)
-   - Wire all modules together
-   - Display progress indicators
-   - Implement logging
-   - Handle errors gracefully
-   - **Note:** Since this is a library, orchestration may be the consuming application's responsibility
+   - **Note:** File management is typically the consuming application's responsibility
 
 ## Technology Stack
 
@@ -55,7 +59,6 @@ Build a Python library that pulls issues, epics, and sprint data from Jira using
 - **✅ jira** (3.10.5+) - Official Jira API client with API token auth support
 - **✅ jira2markdown** (0.5.0+) - Convert Jira markup to markdown using parsing grammars
 - **✅ pydantic** (2.0.0+) - Data validation and settings management
-- **pyyaml** (6.0+) - YAML parsing (optional, for applications that want YAML config)
 - **Development:**
   - **pytest** (8.0.0+) - Testing framework with markers for unit/integration tests
   - **pytest-cov** - Code coverage reporting
@@ -77,8 +80,7 @@ Build a Python library that pulls issues, epics, and sprint data from Jira using
 # Application code (not in library)
 import os
 from dotenv import load_dotenv
-from jira_local_sync.config import JiraSettings
-from jira_local_sync.jira_client import JiraClient
+from jira_local_sync import JiraSettings, JiraProcessor
 
 # App loads environment
 load_dotenv()
@@ -90,9 +92,13 @@ settings = JiraSettings(
     jira_api_token=os.getenv("JIRA_API_TOKEN")
 )
 
-# Use library
-client = JiraClient(settings)
-issues = client.search_issues("project = MYPROJ")
+# Use library processor
+processor = JiraProcessor(settings)
+
+# Process issues using generator pattern
+for issue_key, markdown_content in processor.process_issues("project = MYPROJ"):
+    print(f"Processing {issue_key}...")
+    # Application handles file writing
 ```
 
 ### **.env** (gitignored - for applications)
@@ -190,29 +196,38 @@ Comment text here...
 - ✅ Unit tests (25 tests)
 - ✅ Integration tests with real issues (5 tests)
 
-### Step 5: File Manager Module - **TODO**
+### ✅ Step 5: Processor Module - **COMPLETED**
+- ✅ Create `JiraProcessor` class combining client and converter
+- ✅ Implement `process_issues()` generator for memory-efficient processing
+- ✅ Implement `process_single_issue()` for individual issue handling
+- ✅ Add configurable options (include_comments, include_attachments)
+- ✅ Error handling for failed conversions
+- ✅ Unit tests (12 tests)
+- ✅ Integration tests with real Jira (9 tests)
+
+### Step 6: File Manager Module - **ADDITIONAL FEATURE**
 - Create directory structure based on configuration
 - Generate safe filenames from issue keys and summaries
 - Implement file writing with UTF-8 encoding
 - Organize files by project/type/epic
 - Add metadata.json export for tracking
-- Unit tests
-- Integration tests
+- **Note:** This is an optional feature - applications can handle file management themselves
 
-### Step 6: Main Orchestration - **TODO** (Optional)
-- Wire all modules together
-- Add CLI with argparse (--config, --output-dir, --query)
+### Step 7: Example Application - **OPTIONAL**
+- Demonstrate library usage patterns
+- Show configuration loading from environment
+- CLI interface with argparse (--config, --output-dir, --query)
 - Implement progress tracking with tqdm
 - Add comprehensive logging (INFO, DEBUG, ERROR levels)
-- Create error handling for common failures
-- **Note:** May be better as a separate application/example
+- File writing and organization
+- **Note:** This would be a separate application, not part of the library
 
-### ✅ Step 7: Testing & Documentation - **IN PROGRESS**
+### ✅ Step 8: Testing & Documentation - **IN PROGRESS**
 - ✅ Comprehensive test suite with pytest
-  - ✅ 64 total tests (49 unit, 15 integration)
+  - ✅ 85 total tests (61 unit, 24 integration)
   - ✅ Organized in `tests/unit/` and `tests/integration/`
   - ✅ Markers for unit/integration separation
-  - ✅ 88% code coverage
+  - ✅ High code coverage across all modules
 - ✅ CLAUDE.md for development guidance
 - ✅ .env.example template
 - README with library usage instructions - **TODO**
@@ -246,54 +261,53 @@ Comment text here...
 1. ✅ **config.py** - Plain Pydantic settings model
 2. ✅ **jira_client.py** - Full Jira API integration
 3. ✅ **markdown_converter.py** - Complete markdown conversion
+4. ✅ **processor.py** - High-level orchestration with generator pattern
 
-### TODO Modules
-4. **file_manager.py** - File organization and writing
-5. **Main orchestration** (optional - may be example app)
+### Optional/Future Modules
+5. **file_manager.py** - File organization and writing (application responsibility)
+6. **Example application** - CLI tool demonstrating library usage
 
 ### Test Coverage
-- **64 tests total** (49 unit, 15 integration)
-- **88% code coverage**
-- Unit tests: Fast, no credentials needed
-- Integration tests: Require `.env` with real Jira credentials
+- **85 tests total** (61 unit, 24 integration)
+- **High code coverage** across all modules
+- Unit tests: Fast (< 1 second), no credentials needed
+- Integration tests: Comprehensive (~35 seconds), require `.env` with real Jira credentials
+- Test organization: `tests/unit/` and `tests/integration/` with pytest markers
 
 ### Dependencies
 ```toml
 dependencies = [
     "jira>=3.10.5",
     "pydantic>=2.0.0",
-    "pyyaml>=6.0",  # Optional for apps
     "jira2markdown>=0.5.0",
 ]
 
-[dev]
+[project.optional-dependencies]
+dev = [
     "pytest>=8.0.0",
     "pytest-cov>=6.0.0",
     "pytest-mock>=3.14.0",
-    "python-dotenv>=1.0.0",  # For tests
+    "python-dotenv>=1.0.0",  # For tests and example apps
+]
 ```
 
 ## Next Steps
 
-1. **Implement File Manager Module**
-   - Directory structure creation
-   - Safe filename generation
-   - File writing with UTF-8
-   - Metadata tracking
-
-2. **Create Example Application** (optional)
-   - Demonstrate library usage
-   - Show configuration loading patterns
-   - CLI interface with argparse
-   - Progress tracking
-
-3. **Documentation**
-   - README with usage examples
-   - API documentation
+1. **Documentation** (Priority)
+   - README with library usage examples
+   - API documentation for all public classes
    - Configuration guide
-   - Troubleshooting
+   - Troubleshooting section
 
-4. **Additional Features** (optional)
-   - Rate limiting/retry logic
+2. **Create Example Application** (Recommended)
+   - Demonstrate library usage patterns
+   - Show configuration loading from environment
+   - CLI interface with argparse
+   - File writing and organization
+   - Progress tracking with tqdm
+
+3. **Optional Enhancements**
+   - Rate limiting/retry logic for API calls
    - Concurrent request optimization
-   - More export formats
+   - Additional export formats (JSON, HTML)
+   - File manager module (if needed as part of library)
