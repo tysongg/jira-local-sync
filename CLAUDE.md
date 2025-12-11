@@ -51,7 +51,10 @@ This package includes `py.typed`, indicating it provides type hints. When adding
 
 ## Testing
 
-This project uses pytest with markers to differentiate between unit and integration tests.
+This project uses pytest with markers to differentiate between unit and integration tests. Tests are organized in separate directories:
+
+- `tests/unit/` - Unit tests (fast, no external dependencies)
+- `tests/integration/` - Integration tests (require .env configuration)
 
 ### Test Markers
 
@@ -66,12 +69,20 @@ uv run pytest
 
 # Run only unit tests (fast, no credentials needed)
 uv run pytest -m unit
+# or
+uv run pytest tests/unit/
 
 # Run only integration tests (requires .env file)
 uv run pytest -m integration
+# or
+uv run pytest tests/integration/
 
 # Run specific test file
-uv run pytest tests/test_config.py
+uv run pytest tests/unit/test_config.py
+
+# Run tests for a specific module
+uv run pytest tests/unit/test_jira_client.py
+uv run pytest tests/integration/test_jira_client_integration.py
 
 # Run with verbose output
 uv run pytest -v

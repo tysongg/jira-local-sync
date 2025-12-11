@@ -1,16 +1,12 @@
-from pydantic import Field
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import BaseModel, Field
 
 
-class JiraSettings(BaseSettings):
-    """Jira connection settings loaded from environment variables or .env file."""
+class JiraSettings(BaseModel):
+    """Jira connection settings.
 
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        extra="ignore",
-        env_ignore_empty=True,
-    )
+    This is a plain data model. Applications using this library are responsible
+    for loading configuration from environment variables, files, or other sources.
+    """
 
     jira_url: str = Field(
         description="Jira instance URL (e.g., https://yourcompany.atlassian.net)"
@@ -23,5 +19,9 @@ class JiraSettings(BaseSettings):
     )
 
     def get_jira_auth(self) -> tuple[str, str]:
-        """Return authentication tuple for Jira client."""
+        """Return authentication tuple for Jira client.
+
+        Returns:
+            Tuple of (email, api_token) for basic auth
+        """
         return (self.jira_email, self.jira_api_token)

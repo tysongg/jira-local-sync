@@ -4,6 +4,7 @@ These tests require a .env file with valid Jira credentials.
 Run with: uv run pytest -m integration
 """
 
+import os
 import pytest
 from pydantic import ValidationError
 
@@ -13,17 +14,39 @@ from src.jira_local_sync.jira_client import JiraClient
 
 @pytest.fixture(scope="module")
 def jira_settings():
-    """Load Jira settings from .env file.
+    """Load Jira settings from environment variables.
 
-    This fixture is module-scoped to avoid reloading settings for each test.
+    This fixture demonstrates how applications should load configuration.
+    The library itself doesn't load from environment - that's the app's responsibility.
     """
+    # Load .env file if it exists (simulating what an application would do)
     try:
-        return JiraSettings()
-    except ValidationError as e:
+        from dotenv import load_dotenv
+        load_dotenv()
+    except ImportError:
+        pass  # python-dotenv not available, use environment as-is
+
+    # Get credentials from environment
+    jira_url = os.getenv("JIRA_URL")
+    jira_email = os.getenv("JIRA_EMAIL")
+    jira_api_token = os.getenv("JIRA_API_TOKEN")
+
+    # Skip if not configured
+    if not all([jira_url, jira_email, jira_api_token]):
         pytest.skip(
-            f"Jira credentials not configured. Create a .env file with JIRA_URL, "
-            f"JIRA_EMAIL, and JIRA_API_TOKEN. Error: {e}"
+            "Jira credentials not configured. Set JIRA_URL, JIRA_EMAIL, "
+            "and JIRA_API_TOKEN environment variables or create a .env file."
         )
+
+    # Create settings using the library's data model
+    try:
+        return JiraSettings(
+            jira_url=jira_url,
+            jira_email=jira_email,
+            jira_api_token=jira_api_token
+        )
+    except ValidationError as e:
+        pytest.skip(f"Invalid Jira credentials: {e}")
 
 
 @pytest.fixture(scope="module")
